@@ -88,12 +88,13 @@ from telegram.ext import (
 
 CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION = range(4)
 
-reply_keyboard_profile = [['Имя'], ['Курс'], ['Институт'], ['Закончить']]
+reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
 markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True)
 
-def facts_to_str(user_data: Dict[str, str]) -> str:
+
+def facts_to_str(user_data):
     facts = [f"{key.capitalize()} - {value}" for key, value in user_data.items()]
     return "\n".join(facts).join(["\n", "\n"])
 
@@ -103,7 +104,7 @@ async def profile(update, context):
     if database_funcs.check_if_user_in_base(id) is None:
         await update.message.reply_text(
             "Привет! Круто, что ты поступил в МИСИС. Я могу помочь тебе освоиться. "
-            "Заполни, пожалуйства, небольшую анкету, она нужна, чтобы лучше помочь тебе",
+            "Заполни, пожалуйста, небольшую анкету, она нужна, чтобы лучше помочь тебе",
             reply_markup=markup_profile)
         return CHOOSING_PROFILE
     else:
@@ -148,12 +149,11 @@ async def received_information(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def direction(update, context):
-    user_data = context.user_data
-    text = update.message.text
-
+    reply_keyboard_dir = [['Study Buddy'], ['Сообедник'], ['Товарищ по увлечениям'], ['Земляк'], ['Чел с языком']]
+    markup_dir = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
     await update.message.reply_text(
-        "Круто!",
-        reply_markup=markup_profile,
+        "Кого ты хочешь найти?",
+        reply_markup=markup_dir,
     )
     return CHOOSING_PROFILE
 
