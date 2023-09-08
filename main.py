@@ -86,7 +86,7 @@ from telegram.ext import (
     filters,
 )
 
-CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION = range(4)
+CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT = range(5)
 
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
@@ -150,12 +150,30 @@ async def received_information(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def direction(update, context):
     reply_keyboard_dir = [['Study Buddy'], ['Сообедник'], ['Товарищ по увлечениям'], ['Земляк'], ['Чел с языком']]
-    markup_dir = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
+    markup_dir = ReplyKeyboardMarkup(reply_keyboard_dir, one_time_keyboard=True)
     await update.message.reply_text(
         "Кого ты хочешь найти?",
         reply_markup=markup_dir,
     )
-    return CHOOSING_PROFILE
+    return CHOOSING_DIRECTION
+
+
+async def study(update, context):
+    reply_keyboard_subjects = [['Математика'], ['Физика'], ['ВычМаш'], ['Английский']]
+    markup_subjects = ReplyKeyboardMarkup(reply_keyboard_subjects, one_time_keyboard=True)
+    await update.message.reply_text(
+        "Каким предметом ты хочешь заниматься?",
+        reply_markup=markup_subjects,
+    )
+    return FIX_SUBJECT
+
+
+async def fix_subject(update, context):
+    subj = update.message.text
+    id = update.message.from_user.id
+    await update.message.reply_text('Окей')
+    database_funcs.add_subject(id, subj)
+    return FIX_SUBJECT
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -192,8 +210,14 @@ def main():
             ],
             CHOOSING_DIRECTION: [
                 MessageHandler(
-                    filters.Regex("^(Вперёд!)$"), direction
-                )
+                    filters.Regex("^Вперёд!$"), direction),
+                MessageHandler(filters.Regex("^Study Buddy$"), study)
+
+            ],
+            FIX_SUBJECT: [
+                MessageHandler(
+                    filters.Regex("^(Математика|Физика|ВычМаш|Английский)$"), fix_subject),
+
             ],
             TYPING_CHOICE: [
                 MessageHandler(
