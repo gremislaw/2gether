@@ -27,7 +27,7 @@ async def profile(update, context):
     if database_funcs.check_if_user_in_base(id) is None:
         await update.message.reply_text(
             "Привет! Круто, что ты поступил в МИСИС. Я могу помочь тебе освоиться. "
-            "Заполни, пожалуйста, небольшую анкету, она нужна, чтобы лучше помочь тебе",
+            "Заполни, пожалуйста, небольшую анкету, она нужна, чтобы помочь тебе",
             reply_markup=markup_profile)
         return CHOOSING_PROFILE
     else:

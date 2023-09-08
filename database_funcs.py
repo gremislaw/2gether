@@ -1,7 +1,7 @@
 import sqlite3
 
 
-def add_user_to_base(id, name, institute, course):
+def add_user_to_base(id, name, institute, course): 
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
     cur.execute(
@@ -9,6 +9,12 @@ def add_user_to_base(id, name, institute, course):
         (id, name, institute, course))
     con.commit()
     con.close()
+
+
+# надо добавить таблицу для ланча
+
+def add_user_to_lunch(id):
+    pass
 
 
 def add_subject(id, subject):
