@@ -19,4 +19,12 @@ def add_subject(id, subject):
         (id, subject))
     con.commit()
     con.close()
-    return 1
+
+
+def check_if_user_in_base(user_id):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    haveid = cur.execute("Select user_id from 'user_info' where user_id = ?", (user_id,)).fetchone()
+    con.close()
+    return haveid
+
