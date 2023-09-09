@@ -1,4 +1,4 @@
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Updater,
     Application,
@@ -91,11 +91,9 @@ async def done(update, context):
     user_data = context.user_data
     if "choice" in user_data:
         del user_data["choice"]
-
     id = update.message.from_user.id
     nick = update.message.from_user.username
     if database_funcs.check_if_user_in_base(id) is None:
-
         if len(user_data.keys()) == 3:
             name = user_data['имя']
             course = user_data['курс']
