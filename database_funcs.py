@@ -75,18 +75,26 @@ def find_common_lang(lang):
     return haveid
 
 
+def find_common_regions(reg):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    haveid = cur.execute("Select user_id from 'regions' where region = ?", (reg,)).fetchall()
+    con.close()
+    return haveid
+
+
 def get_lunch_status(user_id):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
     status = cur.execute("SELECT status FROM 'have_a_break' WHERE user_id = ?", (user_id,)).fetchone()
     con.close()
-    return status
+    return int(status[0])
 
 
 def swap_lunch_status(user_id, status):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
-    cur.execute("UPDATE have_a_break SET status = ? WHERE user_id = ?", (user_id, (status + 1) % 2))
+    cur.execute("UPDATE have_a_break SET status = ? WHERE user_id = ?", (user_id[0], (status + 1) % 2))
     con.close()
 
 

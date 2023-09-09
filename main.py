@@ -10,8 +10,8 @@ from regions import regions
 from secret import TOKEN
 import have_a_break
 
-CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, SUCCESS_REGION, FIND_LUNCH = \
-    range(9)
+CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, FIND_REGION, FIND_LUNCH, SUCCESS_REGION = \
+    range(10)
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
@@ -164,7 +164,6 @@ async def fix_hobby(update, context):
     return CHOOSING_DIRECTION
 
 async def lunch(update, context):
-
     
     partner = have_a_break.search_for_lunch(update.message.from_user.id)
     await update.message.reply_text(
@@ -226,18 +225,44 @@ async def region(update, context):
     global reg
     await update.message.reply_text(
         "Напиши название своего региона")
+
+    return FIND_REGION
+
+
+async def find_region(update, context):
+    global reg
     text = update.message.text
+    reply_keyboard_reg = [['Здорово']]
+    markup = ReplyKeyboardMarkup(reply_keyboard_reg, one_time_keyboard=True)
     for x in regions:
         if x[:6] in text:
+            reg = x
+            await update.message.reply_text(
+                f"Я определил для тебя регион {x}", reply_markup=markup)
             return SUCCESS_REGION
+    else:
+        await update.message.reply_text(
+            f"Попробуй ввести регион еще раз")
+        return FIND_REGION
 
 
 async def success_region(update, context):
-    global reg
+    global reg, id
+
+    database_funcs.find_common_regions(reg)
+    list_id = database_funcs.find_common_regions(reg)
+    a = []
+    for user_id in list_id:
+        if id != user_id[0]:
+            a.append(database_funcs.get_profile(user_id[0]))
+    res = f'Я добавил тебя в список людей из этого региона - {reg}:'
+    for user in a:
+        inf = user[0]
+        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
     await update.message.reply_text(
-        f"Я добавил тебя в список людей из этого региона {reg}",
+        res, reply_markup=markup_go
     )
-    return FIX_LANG
+    return CHOOSING_DIRECTION
 
 
 async def fix_lang(update, context):
@@ -277,12 +302,13 @@ def main():
                 MessageHandler(filters.Regex("^Study Buddy$"), study),
                 MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
                 MessageHandler(filters.Regex("^Земляк$"), region),
-                MessageHandler(filters.Regex("^Носитель другого языка$"), lang)
+                MessageHandler(filters.Regex("^Носитель другого языка$"), lang),
+                MessageHandler(filters.Regex("^Сообедник$"), lunch)
 
             ],
-            FIND_LUNCH: [
+            FIND_REGION: [
                 MessageHandler(
-                    filters.Regex("^Сообедник!$"), lunch)
+                    filters.ALL, find_region)
             ],
             FIX_HOBBY: [
                 MessageHandler(
