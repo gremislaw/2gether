@@ -14,9 +14,9 @@ import have_a_break
 
 CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, FIND_REGION, FIND_LUNCH, SUCCESS_REGION = \
     range(10)
-reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить регистрацию']]
-markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
-keyboard_go = [['Вперёд!'], ['Редактировать анкету']]
+reply_keyboard_profile = [['Имя', 'Курс', 'Институт'], ['Закончить регистрацию']]
+markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True, resize_keyboard=True)
+keyboard_go = [['Вперёд!\U0001F609'], ['Редактировать анкету\U0001F440']]
 markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True, resize_keyboard=True)
 
 
@@ -47,14 +47,14 @@ async def regular_choice(update, context):
     context.user_data["choice"] = text
     keyboard_course = [['1', '2'], ['3', '4'], ['5', '6']]
     markup_course = ReplyKeyboardMarkup(keyboard_course, one_time_keyboard=True)
-    keyboard_inst = [['ИКН'], ['ИНМиН'], ['ЭУПП'], ['ИТ'], ['Горный']]
+    keyboard_inst = [['ИКН', 'ИНМиН'], ['ЭУПП', 'ИТ'], ['Горный', 'ИБО']]
     markup_inst = ReplyKeyboardMarkup(keyboard_inst, one_time_keyboard=True)
     if text == 'имя':
-        await update.message.reply_text(f"Как тебя зовут?")
+        await update.message.reply_text(f"Как тебя зовут?\U0001F60A")
     elif text == 'курс':
-        await update.message.reply_text(f"На каком курсе ты учишься?", reply_markup=markup_course)
+        await update.message.reply_text(f"На каком курсе ты учишься?\U0001F642", reply_markup=markup_course)
     elif text == 'институт':
-        await update.message.reply_text(f"В каком институте ты учишься?", reply_markup=markup_inst)
+        await update.message.reply_text(f"В каком институте ты учишься?\U0001F619", reply_markup=markup_inst)
 
     return TYPING_REPLY
 
@@ -62,7 +62,6 @@ async def regular_choice(update, context):
 async def edit_profile(update, context):
     id = update.message.from_user.id
     facts = database_funcs.get_profile(id)[0][:4]
-    print(facts)
     res = f'\n\nИмя: {facts[0]}\nИнститут: {facts[1]}\nКурс: {facts[2]}\n'
     context.user_data['имя'] = facts[0]
     context.user_data['институт'] = facts[1]
@@ -74,15 +73,19 @@ async def edit_profile(update, context):
 
 
 async def received_information(update, context):
+    id = update.message.from_user.id
     user_data = context.user_data
     text = update.message.text
     category = user_data["choice"]
     user_data[category] = text
     del user_data["choice"]
-
+    name = user_data['имя']
+    course = user_data['курс']
+    inst = user_data['институт']
+    database_funcs.update_profile(id, name, inst, course)
     await update.message.reply_text(
         "Круто! Вот, что я уже знаю о тебе:\n"
-        f"{facts_to_str(user_data)}\nТы можешь изменить какие-то данные, если хочешь",
+        f"{facts_to_str(user_data)}\nТы можешь изменить какие-то данные, если хочешь\U0001F609",
         reply_markup=markup_profile,
     )
     return CHOOSING_PROFILE
@@ -103,21 +106,21 @@ async def done(update, context):
             institute = user_data['институт']
             database_funcs.add_user_to_base(id, name, course, institute, nick)
         else:
-            await update.message.reply_text('Сначала заполни все данные', reply_markup=markup_profile)
+            await update.message.reply_text('Сначала заполни все данные\U0001F643', reply_markup=markup_profile)
             return CHOOSING_PROFILE
     await update.message.reply_text(
-        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!",
+        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!\U0001F609",
         reply_markup=markup_go)
     user_data.clear()
     return CHOOSING_DIRECTION
 
 
 async def direction(update, context):
-    reply_keyboard_dir = [['Study Buddy'], ['Сообедник'], ['Товарищ по увлечениям'], ['Земляк'],
-                          ['Носитель другого языка']]
+    reply_keyboard_dir = [['\U0001F43B Study Buddy', '\U0001F35C Eat Meet'], ['\U0001F3C0 Общие увлечения', '\U0001F30F Земляк'],
+                          ['\U0001F5FD Носитель другого языка'], ['Редактировать анкету\U0001F440']]
     markup_dir = ReplyKeyboardMarkup(reply_keyboard_dir, one_time_keyboard=True)
     await update.message.reply_text(
-        "Кого ты хочешь найти?",
+        "Кого ты хочешь найти?\U0001F643",
         reply_markup=markup_dir,
     )
     return CHOOSING_DIRECTION
@@ -141,7 +144,7 @@ async def fix_subject(update, context):
     for user_id in list_id:
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
-    res = 'Смотри, эти ребята тоже хотят заниматься этим предметом\nСвяжись с кем-нибудь из них\n'
+    res = 'Смотри, эти ребята тоже хотят заниматься этим предметом\nСвяжись с кем-нибудь из них\U0001F60A\n'
     for user in a:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
@@ -171,7 +174,7 @@ async def fix_hobby(update, context):
     for user_id in list_id:
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
-    res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\n'
+    res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\U0001F60A\n'
     for user in a:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
@@ -188,12 +191,12 @@ async def lunch(update, context):
     if partner_profile != 'wait':
         partner_profile = partner_profile[0]
         await update.message.reply_text(
-            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: '
+            "Вот с кем ты можешь пообедать\U0001F60A: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: '
                                                 f'{partner_profile[2]}\nКонтакт: @{partner_profile[3]}\n\n',
             reply_markup=markup_go
         )
         await context.bot.send_message(chat_id=partner_id,
-                                       text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: '
+                                       text=f"Вот с кем ты можешь пообедать\U0001F60A: " + f'\nИмя: {cur_profile[0]}\nИнститут: '
                                                                                  f'{cur_profile[1]}\nКурс: '
                                                                                  f'{cur_profile[2]}\nКонтакт: '
                                                                                  f'@{cur_profile[3]}\n\n',
@@ -201,7 +204,7 @@ async def lunch(update, context):
         database_funcs.swap_lunch_status(partner_id, 1)
     else:
         await update.message.reply_text(
-            'Подожди, скоро найдем кого-нибудь', reply_markup=markup_go
+            'Подожди, скоро найдем кого-нибудь\U0001F60C', reply_markup=markup_go
 
         )
 
@@ -212,7 +215,7 @@ async def lang(update, context):
     reply_keyboard_lang = [['Английский', 'Французский'], ['Испанский', 'Немецкий'], ['Китайский']]
     markup = ReplyKeyboardMarkup(reply_keyboard_lang, one_time_keyboard=True)
     await update.message.reply_text(
-        "C носителем какого языка ты хочешь познакомиться?",
+        "C носителем какого языка ты хочешь познакомиться\U0001F60A?",
         reply_markup=markup,
     )
     return FIX_LANG
@@ -241,15 +244,15 @@ async def fix_lang(update, context):
 async def region(update, context):
     global reg
     await update.message.reply_text(
-        "Напиши название своего региона")
+        "Напиши название своего региона\U0001F619")
 
     return FIND_REGION
 
 
 async def find_region(update, context):
     global reg
-    text = update.message.text
-    reply_keyboard_reg = [['Здорово']]
+    text = update.message.text.capitalize()
+    reply_keyboard_reg = [['Здорово \uE404']]
     markup = ReplyKeyboardMarkup(reply_keyboard_reg, one_time_keyboard=True, resize_keyboard=True)
     for x in regions:
         if x[:6] in text:
@@ -259,7 +262,10 @@ async def find_region(update, context):
             return SUCCESS_REGION
     else:
         await update.message.reply_text(
-            f"Попробуй ввести регион еще раз")
+            f"Попробуй ввести регион еще раз\U0001F642", reply_markup=markup_go)
+        text = update.message.text.capitalize()
+        if text == 'Вперёд!\U0001F609' or text == 'Редактировать анкету\U0001F440':
+            return CHOOSING_DIRECTION
         return FIND_REGION
 
 
@@ -272,7 +278,7 @@ async def success_region(update, context):
     for user_id in list_id:
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
-    res = f'Я добавил тебя в список людей из этого региона - {reg}:\n   '
+    res = f'Я добавил тебя в список людей из этого региона\U0001F609 - {reg}:\n   '
     for user in a:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
@@ -316,16 +322,19 @@ def main():
             ],
             CHOOSING_DIRECTION: [
                 MessageHandler(
-                    filters.Regex("^Вперёд!$"), direction),
-                MessageHandler(filters.Regex("^Редактировать анкету$"), edit_profile),
-                MessageHandler(filters.Regex("^Study Buddy$"), study),
-                MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
-                MessageHandler(filters.Regex("^Земляк$"), region),
-                MessageHandler(filters.Regex("^Носитель другого языка$"), lang),
-                MessageHandler(filters.Regex("^Сообедник$"), lunch)
+                    filters.Regex("^Вперёд!\U0001F609$"), direction),
+                MessageHandler(filters.Regex("^Редактировать анкету\U0001F440$"), edit_profile),
+                MessageHandler(filters.Regex("^\U0001F43B Study Buddy$"), study),
+                MessageHandler(filters.Regex("^\U0001F3C0 Общие увлечения$"), hobby),
+                MessageHandler(filters.Regex("^\U0001F30F Земляк$"), region),
+                MessageHandler(filters.Regex("^\U0001F5FD Носитель другого языка$"), lang),
+                MessageHandler(filters.Regex("^\U0001F35C Eat Meet$"), lunch),
+                MessageHandler(filters.Regex("^Редактировать анкету\U0001F440$"), edit_profile)
 
             ],
             FIND_REGION: [
+                #MessageHandler(
+                #    filters.Regex("^Вперёд!$"), direction),
                 MessageHandler(
                     filters.ALL, find_region)
             ],

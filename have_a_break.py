@@ -15,6 +15,8 @@ def share_username(user_id, status):
 def search_for_lunch(user_id):
     database_funcs.add_user_to_lunch(user_id)
     status = database_funcs.get_lunch_status(user_id)
+    if status == 1:
+        return ('wait', -1)
     if database_funcs.get_a_lunch_person(user_id) == None:
         database_funcs.swap_lunch_status(user_id, status)
         return ('wait', -1)
