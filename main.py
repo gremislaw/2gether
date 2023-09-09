@@ -14,10 +14,10 @@ import have_a_break
 
 CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, FIND_REGION, FIND_LUNCH, SUCCESS_REGION = \
     range(10)
-reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
+reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить регистрацию']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
-markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True)
+markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True, resize_keyboard=True)
 
 
 
@@ -79,20 +79,19 @@ async def done(update, context):
     user_data = context.user_data
     if "choice" in user_data:
         del user_data["choice"]
-    await update.message.reply_text(
-        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!",
-        reply_markup=markup_go)
+
     id = update.message.from_user.id
     nick = update.message.from_user.username
     if database_funcs.check_if_user_in_base(id) is None:
         name = institute = course = ''
-        if 'имя' in user_data.keys():
-            name = user_data['имя']
-        if 'курс' in user_data.keys():
-            course = user_data['курс']
-        if 'институт' in user_data.keys():
-            institute = user_data['институт']
-        database_funcs.add_user_to_base(id, name, course, institute, nick)
+        if len(user_data.keys()) == 3:
+            database_funcs.add_user_to_base(id, name, course, institute, nick)
+        else:
+            await update.message.reply_text('Сначала заполни все данные', reply_markup=markup_profile)
+            return CHOOSING_PROFILE
+    await update.message.reply_text(
+        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!",
+        reply_markup=markup_go)
     user_data.clear()
     return CHOOSING_DIRECTION
 
@@ -166,6 +165,7 @@ async def fix_hobby(update, context):
     database_funcs.add_hobby(id, hobby)
     return CHOOSING_DIRECTION
 
+
 async def lunch(update, context):
     partner = have_a_break.search_for_lunch(update.message.from_user.id)[0]
     if partner != 'wait':
@@ -181,23 +181,6 @@ async def lunch(update, context):
 
     return CHOOSING_DIRECTION
 
-async def fix_hobby(update, context):
-    hobby = update.message.text
-    id = update.message.from_user.id
-    list_id = database_funcs.find_common_hobbyes(hobby)
-    a = []
-    for user_id in list_id:
-        if id != user_id[0]:
-            a.append(database_funcs.get_profile(user_id[0]))
-    res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\n'
-    for user in a:
-        inf = user[0]
-        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
-
-    await update.message.reply_text(res)
-
-    database_funcs.add_hobby(id, hobby)
-    return FIX_HOBBY
 
 async def lang(update, context):
     reply_keyboard_lang = [['Английский', 'Французский'], ['Испанский', 'Немецкий'], ['Китайский']]
@@ -340,17 +323,17 @@ def main():
             ],
             TYPING_CHOICE: [
                 MessageHandler(
-                    filters.TEXT & ~(filters.COMMAND | filters.Regex("^Закончить$")), regular_choice
+                    filters.TEXT & ~(filters.COMMAND | filters.Regex("^Закончить регистрацию$")), regular_choice
                 )
             ],
             TYPING_REPLY: [
                 MessageHandler(
-                    filters.TEXT & ~(filters.COMMAND | filters.Regex("^Закончить$")),
+                    filters.TEXT & ~(filters.COMMAND | filters.Regex("^Закончить регистрацию$")),
                     received_information,
                 )
             ],
         },
-        fallbacks=[MessageHandler(filters.Regex("^Закончить$"), done)],
+        fallbacks=[MessageHandler(filters.Regex("^Закончить регистрацию$"), done)],
     )
 
     application.add_handler(conv_handler)

@@ -99,10 +99,10 @@ def swap_lunch_status(user_id, status):
     con.close()
 
 
-def get_a_lunch_person():
+def get_a_lunch_person(id):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
-    have_a_guy = cur.execute("SELECT user_id FROM 'have_a_break' WHERE status = 1").fetchone()
+    have_a_guy = cur.execute(f"SELECT user_id FROM 'have_a_break' WHERE status = 1 and user_id != {id}").fetchone()
     con.close()
     return have_a_guy
 
