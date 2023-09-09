@@ -1,41 +1,26 @@
 import sqlite3
-from database_funcs import *
+import database_funcs
 from queue import Queue
 
 
 
-def get_queue():
-    lunch_queue = [244, 432, 123, 544, 853]
-    return lunch_queue
-
-
-def do_search_status(id):
-    #поставить галочку то что он ищет чела
-    pass
-
-
-def have_a_person():
-    lunch_queue = get_queue()
-    if len(lunch_queue) >= 2:
-        return 1
-    return 0
-
-
-
 def share_username():
-    lunch_queue = get_queue()
-    person = lunch_queue.get()
-    #убрать галочку в базе данных то что он ищет чела
-    return person
+    lunch_person_id = database_funcs.get_a_lunch_person()[0]
+    database_funcs.swap_lunch_status(lunch_person_id)
+    return lunch_person_id
 
 
 
 def search_for_lunch(user_id):
-    if not have_a_person():
-        do_search_status(user_id)
-    else:
-        user2_id = share_username()
-        #первому юзеру надо дать второго а второму первого
+    database_funcs.add_user_to_lunch(user_id)
+    status = database_funcs.get_lunch_status(user_id)
+    if len(database_funcs.get_a_lunch_person()) == 0:
+        database_funcs.swap_lunch_status(user_id, status)
+        while len(database_funcs.get_a_lunch_person()) == 1:
+            pass        
+    user2_id = share_username()
+    user2_name = database_funcs.get_profile(user2_id)
+    return user2_name
     
 
 
