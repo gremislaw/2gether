@@ -20,7 +20,6 @@ keyboard_go = [['Вперёд!']]
 markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True, resize_keyboard=True)
 
 
-
 def facts_to_str(user_data):
     facts = [f"{key.capitalize()} - {value}" for key, value in user_data.items()]
     return "\n".join(facts).join(["\n", "\n"])
@@ -83,8 +82,11 @@ async def done(update, context):
     id = update.message.from_user.id
     nick = update.message.from_user.username
     if database_funcs.check_if_user_in_base(id) is None:
-        name = institute = course = ''
+
         if len(user_data.keys()) == 3:
+            name = user_data['имя']
+            course = user_data['курс']
+            institute = user_data['институт']
             database_funcs.add_user_to_base(id, name, course, institute, nick)
         else:
             await update.message.reply_text('Сначала заполни все данные', reply_markup=markup_profile)
@@ -168,19 +170,25 @@ async def fix_hobby(update, context):
 
 async def lunch(update, context):
     partner_profile, partner_id = have_a_break.search_for_lunch(update.message.from_user.id)
-    partner_profile = partner_profile[0]
     cur_profile = database_funcs.get_profile(update.message.from_user.id)[0]
     if partner_profile != 'wait':
+        partner_profile = partner_profile[0]
         await update.message.reply_text(
-            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: {partner_profile[2]}\nКонтакт: @{partner_profile[3]}\n\n',
+            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: '
+                                                f'{partner_profile[2]}\nКонтакт: @{partner_profile[3]}\n\n',
+            reply_markup=markup_go
         )
-        await context.bot.send_message(chat_id=partner_id, text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: {cur_profile[1]}\nКурс: {cur_profile[2]}\nКонтакт: @{cur_profile[3]}\n\n',
-        )
+        await context.bot.send_message(chat_id=partner_id,
+                                       text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: '
+                                                                                 f'{cur_profile[1]}\nКурс: '
+                                                                                 f'{cur_profile[2]}\nКонтакт: '
+                                                                                 f'@{cur_profile[3]}\n\n',
+                                       )
         database_funcs.swap_lunch_status(partner_id, 1)
     else:
         await update.message.reply_text(
-            'Подожди, скоро найдем кого-нибудь',
-        
+            'Подожди, скоро найдем кого-нибудь', reply_markup=markup_go
+
         )
 
     return CHOOSING_DIRECTION
@@ -279,6 +287,7 @@ async def fix_lang(update, context):
 
     return CHOOSING_DIRECTION
 
+
 def main():
     application = Application.builder().token(TOKEN).build()
     conv_handler = ConversationHandler(
@@ -297,7 +306,6 @@ def main():
                 MessageHandler(filters.Regex("^Земляк$"), region),
                 MessageHandler(filters.Regex("^Носитель другого языка$"), lang),
                 MessageHandler(filters.Regex("^Сообедник$"), lunch)
-
 
             ],
             FIND_REGION: [
