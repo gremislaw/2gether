@@ -51,6 +51,16 @@ def add_lang(id, lang):
     con.close()
 
 
+def add_reg(id, reg):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute(
+        "INSERT OR IGNORE INTO 'regions' ('user_id', 'region') VALUES (?, ?);",
+        (id, reg))
+    con.commit()
+    con.close()
+
+
 def find_common_subjects(subject):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
