@@ -174,8 +174,9 @@ async def lunch(update, context):
         await update.message.reply_text(
             "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: {partner_profile[2]}\nКонтакт: @{partner_profile[3]}\n\n',
         )
-        context.bot.send_message(chat_id=partner_id, text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: {cur_profile[1]}\nКурс: {cur_profile[2]}\nКонтакт: @{cur_profile[3]}\n\n',
+        await context.bot.send_message(chat_id=partner_id, text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: {cur_profile[1]}\nКурс: {cur_profile[2]}\nКонтакт: @{cur_profile[3]}\n\n',
         )
+        database_funcs.swap_lunch_status(partner_id, 1)
     else:
         await update.message.reply_text(
             'Подожди, скоро найдем кого-нибудь',
