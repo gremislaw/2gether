@@ -167,11 +167,14 @@ async def fix_hobby(update, context):
     return CHOOSING_DIRECTION
 
 async def lunch(update, context):
-    partner = have_a_break.search_for_lunch(update.message.from_user.id)[0]
-    if partner != 'wait':
+    partner_profile, partner_id = have_a_break.search_for_lunch(update.message.from_user.id)
+    partner_profile = partner_profile[0]
+    cur_profile = database_funcs.get_profile(update.message.from_user.id)[0]
+    if partner_profile != 'wait':
         await update.message.reply_text(
-            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner[0]}\nИнститут: {partner[1]}\nКурс: {partner[2]}\nКонтакт: @{partner[3]}\n\n',
-        
+            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner_profile[0]}\nИнститут: {partner_profile[1]}\nКурс: {partner_profile[2]}\nКонтакт: @{partner_profile[3]}\n\n',
+        )
+        context.bot.send_message(chat_id=partner_id, text=f"Вот с кем ты можешь пообедать: " + f'\nИмя: {cur_profile[0]}\nИнститут: {cur_profile[1]}\nКурс: {cur_profile[2]}\nКонтакт: @{cur_profile[3]}\n\n',
         )
     else:
         await update.message.reply_text(

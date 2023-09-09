@@ -17,11 +17,11 @@ def search_for_lunch(user_id):
     status = database_funcs.get_lunch_status(user_id)
     if database_funcs.get_a_lunch_person() == None:
         database_funcs.swap_lunch_status(user_id, status)
-        return ('wait',)
+        return ('wait', -1)
     else:
         user2_id = share_username(status)
         user2_profile = database_funcs.get_profile(user2_id)
-        return user2_profile
+        return (user2_profile, user2_id)
 
     
 
