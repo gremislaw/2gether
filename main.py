@@ -9,8 +9,7 @@ from telegram.ext import (
 import database_funcs
 from secret import TOKEN
 
-
-CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT = range(5)
+CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY = range(6)
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
@@ -50,8 +49,8 @@ async def regular_choice(update, context):
         await update.message.reply_text(f"Как тебя зовут?")
     elif text == 'курс':
         await update.message.reply_text(f"На каком курсе ты учишься?", reply_markup=markup_course)
-    if text == 'институт':
-        await update.message.reply_text(f"В каком институте ты учишься?",  reply_markup=markup_inst)
+    elif text == 'институт':
+        await update.message.reply_text(f"В каком институте ты учишься?", reply_markup=markup_inst)
 
     return TYPING_REPLY
 
@@ -69,6 +68,28 @@ async def received_information(update, context):
         reply_markup=markup_profile,
     )
     return CHOOSING_PROFILE
+
+
+async def done(update, context):
+    user_data = context.user_data
+    if "choice" in user_data:
+        del user_data["choice"]
+    await update.message.reply_text(
+        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!",
+        reply_markup=markup_go)
+    id = update.message.from_user.id
+    nick = update.message.from_user.username
+    if database_funcs.check_if_user_in_base(id) is None:
+        name = institute = course = ''
+        if 'имя' in user_data.keys():
+            name = user_data['имя']
+        if 'курс' in user_data.keys():
+            course = user_data['курс']
+        if 'институт' in user_data.keys():
+            institute = user_data['институт']
+        database_funcs.add_user_to_base(id, name, course, institute, nick)
+    user_data.clear()
+    return CHOOSING_DIRECTION
 
 
 async def direction(update, context):
@@ -94,30 +115,50 @@ async def study(update, context):
 async def fix_subject(update, context):
     subj = update.message.text
     id = update.message.from_user.id
-    await update.message.reply_text('Окей')
+    list_id = database_funcs.find_common_subjects(subj)
+    a = []
+    for user_id in list_id:
+        if id != user_id[0]:
+            a.append(database_funcs.get_profile(user_id[0]))
+    res = 'Смотри, эти ребята тоже хотят заниматься этим предметом\nСвяжись с кем-нибудь из них\n'
+    for user in a:
+        inf = user[0]
+        res += f'Имя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+
+    await update.message.reply_text(res)
+
     database_funcs.add_subject(id, subj)
     return FIX_SUBJECT
 
 
-async def done(update, context):
-    user_data = context.user_data
-    if "choice" in user_data:
-        del user_data["choice"]
+async def hobby(update, context):
+    reply_keyboard_hobbyes = [['Футбол', 'Волейбол'], ['Танцы', 'Вокал'], ['Гейм-дизайн', 'Спорт-программирование'],
+                              ['Шахматы', 'Походы']]
+    markup = ReplyKeyboardMarkup(reply_keyboard_hobbyes, one_time_keyboard=True)
     await update.message.reply_text(
-        f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!",
-        reply_markup=markup_go)
+        "Чем ты увлекаешься?",
+        reply_markup=markup,
+    )
+    return FIX_HOBBY
+
+
+async def fix_hobby(update, context):
+    hobby = update.message.text
     id = update.message.from_user.id
-    if database_funcs.check_if_user_in_base(id) is None:
-        name = institute = course = ''
-        if 'имя' in user_data.keys():
-            name = user_data['имя']
-        if 'курс' in user_data.keys():
-            course = user_data['курс']
-        if 'институт' in user_data.keys():
-            institute = user_data['институт']
-        database_funcs.add_user_to_base(id, name, course, institute)
-    user_data.clear()
-    return CHOOSING_DIRECTION
+    list_id = database_funcs.find_common_hobbyes(hobby)
+    a = []
+    for user_id in list_id:
+        if id != user_id[0]:
+            a.append(database_funcs.get_profile(user_id[0]))
+    res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\n'
+    for user in a:
+        inf = user[0]
+        res += f'Имя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+
+    await update.message.reply_text(res)
+
+    database_funcs.add_subject(id, hobby)
+    return FIX_HOBBY
 
 
 def main():
@@ -134,7 +175,14 @@ def main():
             CHOOSING_DIRECTION: [
                 MessageHandler(
                     filters.Regex("^Вперёд!$"), direction),
-                MessageHandler(filters.Regex("^Study Buddy$"), study)
+                MessageHandler(filters.Regex("^Study Buddy$"), study),
+                MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby)
+
+            ],
+            FIX_HOBBY: [
+                MessageHandler(
+                    filters.Regex("^(Футбол|Волейбол|Танцы|Вокал|Гейм-дизайн|Спорт-программирование|Шахматы|Походы)$"),
+                    fix_hobby),
 
             ],
             FIX_SUBJECT: [
