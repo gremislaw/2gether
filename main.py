@@ -126,10 +126,10 @@ async def fix_subject(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_subject(id, subj)
-    return FIX_SUBJECT
+    return CHOOSING_DIRECTION
 
 
 async def hobby(update, context):
@@ -156,10 +156,10 @@ async def fix_hobby(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_hobby(id, hobby)
-    return FIX_HOBBY
+    return CHOOSING_DIRECTION
 
 
 async def lang(update, context):
@@ -185,10 +185,11 @@ async def fix_lang(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_lang(id, lang)
-    return FIX_LANG
+
+    return CHOOSING_DIRECTION
 
 
 def main():
