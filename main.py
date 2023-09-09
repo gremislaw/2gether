@@ -1,8 +1,6 @@
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
-    Updater,
     Application,
-    CallbackQueryHandler,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
