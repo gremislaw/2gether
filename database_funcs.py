@@ -75,6 +75,14 @@ def find_common_lang(lang):
     return haveid
 
 
+def find_common_regions(reg):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    haveid = cur.execute("Select user_id from 'regions' where region = ?", (reg,)).fetchall()
+    con.close()
+    return haveid
+
+
 def get_lunch_status(user_id):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()

@@ -22,6 +22,7 @@ def search_for_lunch(user_id):
         user2_id = share_username(status)
         user2_profile = database_funcs.get_profile(user2_id)
         return user2_profile
+
     
 
 
