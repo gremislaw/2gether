@@ -1,6 +1,8 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
+    Updater,
     Application,
+    CallbackQueryHandler,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
@@ -16,6 +18,7 @@ reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Зак
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
 markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True)
+
 
 
 def facts_to_str(user_data):
@@ -164,13 +167,17 @@ async def fix_hobby(update, context):
     return CHOOSING_DIRECTION
 
 async def lunch(update, context):
-
-    
-    partner = have_a_break.search_for_lunch(update.message.from_user.id)
-    await update.message.reply_text(
-        "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner[0]}\nИнститут: {partner[1]}\nКурс: {partner[2]}\nКонтакт: @{partner[3]}\n\n',
+    partner = have_a_break.search_for_lunch(update.message.from_user.id)[0]
+    if partner != 'wait':
+        await update.message.reply_text(
+            "Вот с кем ты можешь пообедать: " + f'\nИмя: {partner[0]}\nИнститут: {partner[1]}\nКурс: {partner[2]}\nКонтакт: @{partner[3]}\n\n',
         
-    )
+        )
+    else:
+        await update.message.reply_text(
+            'Подожди, скоро найдем кого-нибудь',
+        
+        )
 
     return CHOOSING_DIRECTION
 
@@ -259,10 +266,8 @@ async def fix_lang(update, context):
 
     return CHOOSING_DIRECTION
 
-
 def main():
     application = Application.builder().token(TOKEN).build()
-
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", profile)],
         states={
@@ -277,12 +282,8 @@ def main():
                 MessageHandler(filters.Regex("^Study Buddy$"), study),
                 MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
                 MessageHandler(filters.Regex("^Земляк$"), region),
-                MessageHandler(filters.Regex("^Носитель другого языка$"), lang)
-
-            ],
-            FIND_LUNCH: [
-                MessageHandler(
-                    filters.Regex("^Сообедник!$"), lunch)
+                MessageHandler(filters.Regex("^Носитель другого языка$"), lang),
+                MessageHandler(filters.Regex("^Сообедник$"), lunch)
             ],
             FIX_HOBBY: [
                 MessageHandler(

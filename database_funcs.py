@@ -80,20 +80,21 @@ def get_lunch_status(user_id):
     cur = con.cursor()
     status = cur.execute("SELECT status FROM 'have_a_break' WHERE user_id = ?", (user_id,)).fetchone()
     con.close()
-    return status
+    return int(status[0])
 
 
 def swap_lunch_status(user_id, status):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
-    cur.execute("UPDATE have_a_break SET status = ? WHERE user_id = ?", (user_id, (status + 1) % 2))
+    cur.execute(f"UPDATE have_a_break SET status = {(status + 1) % 2} WHERE user_id = {user_id}")
+    con.commit()
     con.close()
 
 
 def get_a_lunch_person():
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
-    have_a_guy = cur.execute("SELECT user_id FROM 'have_a_break' WHERE status = 1").fetchall()
+    have_a_guy = cur.execute("SELECT user_id FROM 'have_a_break' WHERE status = 1").fetchone()
     con.close()
     return have_a_guy
 
