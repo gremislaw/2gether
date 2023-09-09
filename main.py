@@ -2,15 +2,16 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
     CommandHandler,
-    ContextTypes,
     ConversationHandler,
     MessageHandler,
     filters)
 import database_funcs
+from regions import regions
 from secret import TOKEN
 import have_a_break
 
-CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, FIND_LUNCH = range(8)
+CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, SUCCESS_REGION, FIND_LUNCH = \
+    range(9)
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
@@ -127,10 +128,10 @@ async def fix_subject(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_subject(id, subj)
-    return FIX_SUBJECT
+    return CHOOSING_DIRECTION
 
 
 async def hobby(update, context):
@@ -157,10 +158,10 @@ async def fix_hobby(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_hobby(id, hobby)
-    return FIX_HOBBY
+    return CHOOSING_DIRECTION
 
 async def lunch(update, context):
 
@@ -214,10 +215,49 @@ async def fix_lang(update, context):
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_lang(id, lang)
+
+    return CHOOSING_DIRECTION
+
+
+async def region(update, context):
+    global reg
+    await update.message.reply_text(
+        "Напиши название своего региона")
+    text = update.message.text
+    for x in regions:
+        if x[:6] in text:
+            return SUCCESS_REGION
+
+
+async def success_region(update, context):
+    global reg
+    await update.message.reply_text(
+        f"Я добавил тебя в список людей из этого региона {reg}",
+    )
     return FIX_LANG
+
+
+async def fix_lang(update, context):
+    lang = update.message.text
+    id = update.message.from_user.id
+    list_id = database_funcs.find_common_lang(lang)
+    a = []
+    for user_id in list_id:
+        if id != user_id[0]:
+            a.append(database_funcs.get_profile(user_id[0]))
+    res = 'Вот кого мне удалось найти\nСвяжись с кем-нибудь из них\n'
+    for user in a:
+        inf = user[0]
+        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+
+    await update.message.reply_text(res, reply_markup=markup_go)
+
+    database_funcs.add_lang(id, lang)
+
+    return CHOOSING_DIRECTION
 
 
 def main():
@@ -236,6 +276,7 @@ def main():
                     filters.Regex("^Вперёд!$"), direction),
                 MessageHandler(filters.Regex("^Study Buddy$"), study),
                 MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
+                MessageHandler(filters.Regex("^Земляк$"), region),
                 MessageHandler(filters.Regex("^Носитель другого языка$"), lang)
 
             ],
@@ -257,6 +298,11 @@ def main():
             FIX_LANG: [
                 MessageHandler(
                     filters.Regex("^(Английский|Французский|Испанский|Немецкий|Китайский)$"), fix_lang),
+
+            ],
+            SUCCESS_REGION: [
+                MessageHandler(
+                    filters.ALL, success_region),
 
             ],
             TYPING_CHOICE: [
