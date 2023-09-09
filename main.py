@@ -9,7 +9,7 @@ from telegram.ext import (
 import database_funcs
 from secret import TOKEN
 
-CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY = range(6)
+CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG = range(7)
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
 keyboard_go = [['Вперёд!']]
@@ -93,7 +93,8 @@ async def done(update, context):
 
 
 async def direction(update, context):
-    reply_keyboard_dir = [['Study Buddy'], ['Сообедник'], ['Товарищ по увлечениям'], ['Земляк'], ['Чел с языком']]
+    reply_keyboard_dir = [['Study Buddy'], ['Сообедник'], ['Товарищ по увлечениям'], ['Земляк'],
+                          ['Носитель другого языка']]
     markup_dir = ReplyKeyboardMarkup(reply_keyboard_dir, one_time_keyboard=True)
     await update.message.reply_text(
         "Кого ты хочешь найти?",
@@ -123,7 +124,7 @@ async def fix_subject(update, context):
     res = 'Смотри, эти ребята тоже хотят заниматься этим предметом\nСвяжись с кем-нибудь из них\n'
     for user in a:
         inf = user[0]
-        res += f'Имя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
     await update.message.reply_text(res)
 
@@ -153,12 +154,41 @@ async def fix_hobby(update, context):
     res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\n'
     for user in a:
         inf = user[0]
-        res += f'Имя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
     await update.message.reply_text(res)
 
-    database_funcs.add_subject(id, hobby)
+    database_funcs.add_hobby(id, hobby)
     return FIX_HOBBY
+
+
+async def lang(update, context):
+    reply_keyboard_lang = [['Английский', 'Французский'], ['Испанский', 'Немецкий'], ['Китайский']]
+    markup = ReplyKeyboardMarkup(reply_keyboard_lang, one_time_keyboard=True)
+    await update.message.reply_text(
+        "C носителем какого языка ты хочешь познакомиться?",
+        reply_markup=markup,
+    )
+    return FIX_LANG
+
+
+async def fix_lang(update, context):
+    lang = update.message.text
+    id = update.message.from_user.id
+    list_id = database_funcs.find_common_lang(lang)
+    a = []
+    for user_id in list_id:
+        if id != user_id[0]:
+            a.append(database_funcs.get_profile(user_id[0]))
+    res = 'Вот кого мне удалось найти\nСвяжись с кем-нибудь из них\n'
+    for user in a:
+        inf = user[0]
+        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+
+    await update.message.reply_text(res)
+
+    database_funcs.add_lang(id, lang)
+    return FIX_LANG
 
 
 def main():
@@ -176,7 +206,8 @@ def main():
                 MessageHandler(
                     filters.Regex("^Вперёд!$"), direction),
                 MessageHandler(filters.Regex("^Study Buddy$"), study),
-                MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby)
+                MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
+                MessageHandler(filters.Regex("^Носитель другого языка$"), lang)
 
             ],
             FIX_HOBBY: [
@@ -188,6 +219,11 @@ def main():
             FIX_SUBJECT: [
                 MessageHandler(
                     filters.Regex("^(Математика|Физика|ВычМаш|Английский)$"), fix_subject),
+
+            ],
+            FIX_LANG: [
+                MessageHandler(
+                    filters.Regex("^(Английский|Французский|Испанский|Немецкий|Китайский)$"), fix_lang),
 
             ],
             TYPING_CHOICE: [

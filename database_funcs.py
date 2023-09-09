@@ -27,6 +27,26 @@ def add_subject(id, subject):
     con.close()
 
 
+def add_hobby(id, hobby):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute(
+        "INSERT OR IGNORE INTO 'hobbyes' ('user_id', 'hobby') VALUES (?, ?);",
+        (id, hobby))
+    con.commit()
+    con.close()
+
+
+def add_lang(id, lang):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute(
+        "INSERT OR IGNORE INTO 'languages' ('user_id', 'language') VALUES (?, ?);",
+        (id, lang))
+    con.commit()
+    con.close()
+
+
 def find_common_subjects(subject):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
@@ -39,6 +59,14 @@ def find_common_hobbyes(hobby):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
     haveid = cur.execute("Select user_id from 'hobbyes' where hobby = ?", (hobby,)).fetchall()
+    con.close()
+    return haveid
+
+
+def find_common_lang(lang):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    haveid = cur.execute("Select user_id from 'languages' where language = ?", (lang,)).fetchall()
     con.close()
     return haveid
 
