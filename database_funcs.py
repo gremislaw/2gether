@@ -14,8 +14,14 @@ def add_user_to_base(id, name, institute, course, nick):
 # надо добавить таблицу для ланча
 
 def add_user_to_lunch(id):
-    pass
-
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute(
+        "INSERT INTO 'have_a_break' ('user_id', 'status') VALUES (?, ?);",
+        (id, 0))
+    con.commit()
+    con.close()
+    
 
 def add_subject(id, subject):
     con = sqlite3.connect("main_db.db")
