@@ -242,7 +242,7 @@ def main():
             FIND_LUNCH: [
                 MessageHandler(
                     filters.Regex("^Сообедник!$"), lunch)
-            ]
+            ],
             FIX_HOBBY: [
                 MessageHandler(
                     filters.Regex("^(Футбол|Волейбол|Танцы|Вокал|Гейм-дизайн|Спорт-программирование|Шахматы|Походы)$"),
