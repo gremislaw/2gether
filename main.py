@@ -16,7 +16,7 @@ CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, 
     range(10)
 reply_keyboard_profile = [['Имя', 'Курс'], ['Институт'], ['Закончить регистрацию']]
 markup_profile = ReplyKeyboardMarkup(reply_keyboard_profile, one_time_keyboard=True)
-keyboard_go = [['Вперёд!']]
+keyboard_go = [['Вперёд!'], ['Редактировать анкету']]
 markup_go = ReplyKeyboardMarkup(keyboard_go, one_time_keyboard=True, resize_keyboard=True)
 
 
@@ -57,6 +57,20 @@ async def regular_choice(update, context):
         await update.message.reply_text(f"В каком институте ты учишься?", reply_markup=markup_inst)
 
     return TYPING_REPLY
+
+
+async def edit_profile(update, context):
+    id = update.message.from_user.id
+    facts = database_funcs.get_profile(id)[0][:4]
+    print(facts)
+    res = f'\n\nИмя: {facts[0]}\nИнститут: {facts[1]}\nКурс: {facts[2]}\n'
+    context.user_data['имя'] = facts[0]
+    context.user_data['институт'] = facts[1]
+    context.user_data['курс'] = facts[2]
+    await update.message.reply_text(
+        f"\nСейчас я знаю эти факты о тебе: {res}\nМожешь изменить что-то",
+        reply_markup=markup_profile)
+    return CHOOSING_PROFILE
 
 
 async def received_information(update, context):
@@ -236,7 +250,7 @@ async def find_region(update, context):
     global reg
     text = update.message.text
     reply_keyboard_reg = [['Здорово']]
-    markup = ReplyKeyboardMarkup(reply_keyboard_reg, one_time_keyboard=True)
+    markup = ReplyKeyboardMarkup(reply_keyboard_reg, one_time_keyboard=True, resize_keyboard=True)
     for x in regions:
         if x[:6] in text:
             reg = x
@@ -251,20 +265,22 @@ async def find_region(update, context):
 
 async def success_region(update, context):
     global reg, id
-
+    id = update.message.from_user.id
     database_funcs.find_common_regions(reg)
     list_id = database_funcs.find_common_regions(reg)
     a = []
     for user_id in list_id:
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
-    res = f'Я добавил тебя в список людей из этого региона - {reg}:'
+    res = f'Я добавил тебя в список людей из этого региона - {reg}:\n   '
     for user in a:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
+
     await update.message.reply_text(
         res, reply_markup=markup_go
     )
+    database_funcs.add_reg(id, reg)
     return CHOOSING_DIRECTION
 
 
@@ -301,6 +317,7 @@ def main():
             CHOOSING_DIRECTION: [
                 MessageHandler(
                     filters.Regex("^Вперёд!$"), direction),
+                MessageHandler(filters.Regex("^Редактировать анкету$"), edit_profile),
                 MessageHandler(filters.Regex("^Study Buddy$"), study),
                 MessageHandler(filters.Regex("^Товарищ по увлечениям$"), hobby),
                 MessageHandler(filters.Regex("^Земляк$"), region),
