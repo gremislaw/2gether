@@ -11,17 +11,15 @@ def add_user_to_base(id, name, institute, course, nick):
     con.close()
 
 
-# надо добавить таблицу для ланча
-
 def add_user_to_lunch(id):
     con = sqlite3.connect("main_db.db")
     cur = con.cursor()
     cur.execute(
-        "INSERT INTO 'have_a_break' ('user_id', 'status') VALUES (?, ?);",
+        "INSERT OR IGNORE INTO 'have_a_break' ('user_id', 'status') VALUES (?, ?);",
         (id, 0))
     con.commit()
     con.close()
-    
+
 
 def add_subject(id, subject):
     con = sqlite3.connect("main_db.db")
@@ -75,6 +73,29 @@ def find_common_lang(lang):
     haveid = cur.execute("Select user_id from 'languages' where language = ?", (lang,)).fetchall()
     con.close()
     return haveid
+
+
+def get_lunch_status(user_id):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    status = cur.execute("SELECT status FROM 'have_a_break' WHERE user_id = ?", (user_id,)).fetchone()
+    con.close()
+    return status
+
+
+def swap_lunch_status(user_id, status):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute("UPDATE have_a_break SET status = ? WHERE user_id = ?", (user_id, (status + 1) % 2))
+    con.close()
+
+
+def get_a_lunch_person():
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    have_a_guy = cur.execute("SELECT user_id FROM 'have_a_break' WHERE status = 1").fetchall()
+    con.close()
+    return have_a_guy
 
 
 def get_profile(user_id):
