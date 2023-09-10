@@ -182,7 +182,6 @@ async def fix_hobby(update, context):
     for user in random_guys:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
-
     await update.message.reply_text(res, reply_markup=markup_go)
 
     database_funcs.add_hobby(id, hobby)

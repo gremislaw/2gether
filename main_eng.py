@@ -60,7 +60,6 @@ async def regular_choice(update, context):
 async def edit_profile(update, context):
     id = update.message.from_user.id
     facts = database_funcs.get_profile(id)[0][:4]
-    print(facts)
     res = f'\n\nName: {facts[0]}\nFaculty: {facts[1]}\nYear: {facts[2]}\n'
     context.user_data['name'] = facts[0]
     context.user_data['faculty'] = facts[1]
