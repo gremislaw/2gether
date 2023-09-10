@@ -11,6 +11,7 @@ import database_funcs
 from regions import regions
 from secret import TOKEN
 import have_a_break
+import random
 
 CHOOSING_PROFILE, TYPING_REPLY, TYPING_CHOICE, CHOOSING_DIRECTION, FIX_SUBJECT, FIX_HOBBY, FIX_LANG, FIND_REGION, FIND_LUNCH, SUCCESS_REGION = \
     range(10)
@@ -79,10 +80,11 @@ async def received_information(update, context):
     category = user_data["choice"]
     user_data[category] = text
     del user_data["choice"]
-    name = user_data['имя']
-    course = user_data['курс']
-    inst = user_data['институт']
-    database_funcs.update_profile(id, name, inst, course)
+    if len(user_data.keys()) == 3:
+        name = user_data['имя']
+        course = user_data['курс']
+        inst = user_data['институт']
+        database_funcs.update_profile(id, name, inst, course)
     await update.message.reply_text(
         "Круто! Вот, что я уже знаю о тебе:\n"
         f"{facts_to_str(user_data)}\nТы можешь изменить какие-то данные, если хочешь\U0001F609",
@@ -145,7 +147,8 @@ async def fix_subject(update, context):
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
     res = 'Смотри, эти ребята тоже хотят заниматься этим предметом\nСвяжись с кем-нибудь из них\U0001F60A\n'
-    for user in a:
+    random_guys = random.sample(a, min(len(a), 5))
+    for user in random_guys:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
@@ -175,7 +178,8 @@ async def fix_hobby(update, context):
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
     res = 'Смотри, эти ребята увлекаются тем же, что и ты\nСвяжись с кем-нибудь из них\U0001F60A\n'
-    for user in a:
+    random_guys = random.sample(a, min(len(a), 5))
+    for user in random_guys:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
@@ -230,7 +234,8 @@ async def fix_lang(update, context):
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
     res = 'Вот кого мне удалось найти\nСвяжись с кем-нибудь из них\n'
-    for user in a:
+    random_guys = random.sample(a, min(len(a), 5))
+    for user in random_guys:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
@@ -279,7 +284,8 @@ async def success_region(update, context):
         if id != user_id[0]:
             a.append(database_funcs.get_profile(user_id[0]))
     res = f'Я добавил тебя в список людей из этого региона\U0001F609 - {reg}:\n   '
-    for user in a:
+    random_guys = random.sample(a, min(len(a), 5))
+    for user in random_guys:
         inf = user[0]
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
