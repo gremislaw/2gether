@@ -132,3 +132,11 @@ def check_if_user_in_base(user_id):
     con.close()
     return haveid
 
+
+def update_profile(id, name, course, institute):
+    con = sqlite3.connect("main_db.db")
+    cur = con.cursor()
+    cur.execute(f'UPDATE user_info SET name = "{name}", course = "{course}", institute = "{institute}" WHERE user_id = {id}')
+    con.commit()
+    con.close()
+
