@@ -46,10 +46,10 @@ async def profile(update, context):
 async def regular_choice(update, context):
     text = update.message.text.lower()
     context.user_data["choice"] = text
-    keyboard_course = [['1', '2'], ['3', '4'], ['5', '6']]
-    markup_course = ReplyKeyboardMarkup(keyboard_course, one_time_keyboard=True)
+    keyboard_course = [['1-Бак', '2-Бак', '3-Бак'], [ '4-Бак','1-Маг', '2-Маг']]
+    markup_course = ReplyKeyboardMarkup(keyboard_course, one_time_keyboard=True, resize_keyboard=True)
     keyboard_inst = [['ИКН', 'ИНМиН'], ['ЭУПП', 'ИТ'], ['Горный', 'ИБО']]
-    markup_inst = ReplyKeyboardMarkup(keyboard_inst, one_time_keyboard=True)
+    markup_inst = ReplyKeyboardMarkup(keyboard_inst, one_time_keyboard=True, resize_keyboard=True)
     if text == 'имя':
         await update.message.reply_text(f"Как тебя зовут?\U0001F60A")
     elif text == 'курс':
