@@ -215,7 +215,7 @@ async def lang(update, context):
     reply_keyboard_lang = [['Английский', 'Французский'], ['Испанский', 'Немецкий'], ['Китайский']]
     markup = ReplyKeyboardMarkup(reply_keyboard_lang, one_time_keyboard=True)
     await update.message.reply_text(
-        "C носителем какого языка ты хочешь познакомиться\U0001F60A?",
+        "C носителем какого языка ты хочешь познакомиться?\U0001F60A",
         reply_markup=markup,
     )
     return FIX_LANG
