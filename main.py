@@ -31,7 +31,7 @@ async def profile(update, context):
     if database_funcs.check_if_user_in_base(id) is None:
         await update.message.reply_text(
             "Привет! Круто, что ты поступил в МИСИС. Я могу помочь тебе освоиться. "
-            "Заполни, пожалуйста, небольшую анкету, она нужна, чтобы помочь тебе",
+            "Заполни, пожалуйста, небольшую анкету!",
             reply_markup=markup_profile)
         return CHOOSING_PROFILE
     else:
@@ -44,15 +44,21 @@ async def profile(update, context):
 
 
 async def regular_choice(update, context):
+    id = update.message.from_user.id
     text = update.message.text.lower()
     context.user_data["choice"] = text
     keyboard_course = [['1-Бак', '2-Бак', '3-Бак'], [ '4-Бак','1-Маг', '2-Маг']]
     markup_course = ReplyKeyboardMarkup(keyboard_course, one_time_keyboard=True, resize_keyboard=True)
     keyboard_inst = [['ИКН', 'ИНМиН'], ['ЭУПП', 'ИТ'], ['Горный', 'ИБО']]
     markup_inst = ReplyKeyboardMarkup(keyboard_inst, one_time_keyboard=True, resize_keyboard=True)
+    await context.bot.delete_message(id, update.message.id - 1)
+    await context.bot.delete_message(id, update.message.id)
+
     if text == 'имя':
         await update.message.reply_text(f"Как тебя зовут?\U0001F60A")
+        #await context.bot.edit_message_text(chat_id=id, message_id=update.message.message_id - 1, text=f"Как тебя зовут?\U0001F60A", reply_markup=markup_course)
     elif text == 'курс':
+        
         await update.message.reply_text(f"На каком курсе ты учишься?\U0001F642", reply_markup=markup_course)
     elif text == 'институт':
         await update.message.reply_text(f"В каком институте ты учишься?\U0001F619", reply_markup=markup_inst)
@@ -62,6 +68,8 @@ async def regular_choice(update, context):
 
 async def edit_profile(update, context):
     id = update.message.from_user.id
+    await context.bot.delete_message(id, update.message.id - 1)
+    await context.bot.delete_message(id, update.message.id)
     facts = database_funcs.get_profile(id)[0][:4]
     res = f'\n\nИмя: {facts[0]}\nИнститут: {facts[1]}\nКурс: {facts[2]}\n'
     context.user_data['имя'] = facts[0]
@@ -75,6 +83,8 @@ async def edit_profile(update, context):
 
 async def received_information(update, context):
     id = update.message.from_user.id
+    await context.bot.delete_message(id, update.message.id - 1)
+    await context.bot.delete_message(id, update.message.id)
     user_data = context.user_data
     text = update.message.text
     category = user_data["choice"]
@@ -110,6 +120,8 @@ async def done(update, context):
         else:
             await update.message.reply_text('Сначала заполни все данные\U0001F643', reply_markup=markup_profile)
             return CHOOSING_PROFILE
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     await update.message.reply_text(
         f"Теперь я знаю эти факты о тебе: {facts_to_str(user_data)}\nМожем начинать искать друзей!\U0001F609",
         reply_markup=markup_go)
@@ -118,6 +130,8 @@ async def done(update, context):
 
 
 async def direction(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     reply_keyboard_dir = [['\U0001F43B Study Buddy', '\U0001F35C Eat Meet'], ['\U0001F3C0 Общие увлечения', '\U0001F30F Земляк'],
                           ['\U0001F5FD Носитель другого языка'], ['Редактировать анкету\U0001F440']]
     markup_dir = ReplyKeyboardMarkup(reply_keyboard_dir, one_time_keyboard=True)
@@ -129,6 +143,8 @@ async def direction(update, context):
 
 
 async def study(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     reply_keyboard_subjects = [['Математика'], ['Физика'], ['ВычМаш'], ['Английский']]
     markup_subjects = ReplyKeyboardMarkup(reply_keyboard_subjects, one_time_keyboard=True)
     await update.message.reply_text(
@@ -139,6 +155,8 @@ async def study(update, context):
 
 
 async def fix_subject(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     subj = update.message.text
     id = update.message.from_user.id
     list_id = database_funcs.find_common_subjects(subj)
@@ -153,12 +171,14 @@ async def fix_subject(update, context):
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
     await update.message.reply_text(res, reply_markup=markup_go)
-
+    
     database_funcs.add_subject(id, subj)
     return CHOOSING_DIRECTION
 
 
 async def hobby(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     reply_keyboard_hobbyes = [['Футбол', 'Волейбол'], ['Танцы', 'Вокал'], ['Гейм-дизайн', 'Спорт-программирование'],
                               ['Шахматы', 'Походы']]
     markup = ReplyKeyboardMarkup(reply_keyboard_hobbyes, one_time_keyboard=True)
@@ -170,6 +190,8 @@ async def hobby(update, context):
 
 
 async def fix_hobby(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     hobby = update.message.text
     id = update.message.from_user.id
     list_id = database_funcs.find_common_hobbyes(hobby)
@@ -190,6 +212,8 @@ async def fix_hobby(update, context):
 
 
 async def lunch(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     partner_profile, partner_id = have_a_break.search_for_lunch(update.message.from_user.id)
     cur_profile = database_funcs.get_profile(update.message.from_user.id)[0]
     if partner_profile != 'wait':
@@ -216,6 +240,8 @@ async def lunch(update, context):
 
 
 async def lang(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     reply_keyboard_lang = [['Английский', 'Французский'], ['Испанский', 'Немецкий'], ['Китайский']]
     markup = ReplyKeyboardMarkup(reply_keyboard_lang, one_time_keyboard=True)
     await update.message.reply_text(
@@ -225,29 +251,11 @@ async def lang(update, context):
     return FIX_LANG
 
 
-async def fix_lang(update, context):
-    lang = update.message.text
-    id = update.message.from_user.id
-    list_id = database_funcs.find_common_lang(lang)
-    a = []
-    for user_id in list_id:
-        if id != user_id[0]:
-            a.append(database_funcs.get_profile(user_id[0]))
-    res = 'Вот кого мне удалось найти\nСвяжись с кем-нибудь из них\n'
-    random_guys = random.sample(a, min(len(a), 5))
-    for user in random_guys:
-        inf = user[0]
-        res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
-
-    await update.message.reply_text(res, reply_markup=markup_go)
-
-    database_funcs.add_lang(id, lang)
-
-    return CHOOSING_DIRECTION
-
 
 async def region(update, context):
     global reg
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     await update.message.reply_text(
         "Напиши название своего региона\U0001F619")
 
@@ -255,6 +263,8 @@ async def region(update, context):
 
 
 async def find_region(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     global reg
     text = update.message.text.capitalize()
     reply_keyboard_reg = [['Здорово \uE404']]
@@ -275,6 +285,8 @@ async def find_region(update, context):
 
 
 async def success_region(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     global reg, id
     id = update.message.from_user.id
     database_funcs.find_common_regions(reg)
@@ -297,6 +309,8 @@ async def success_region(update, context):
 
 
 async def fix_lang(update, context):
+    await context.bot.delete_message(update.message.from_user.id, update.message.id - 1)
+    await context.bot.delete_message(update.message.from_user.id, update.message.id)
     lang = update.message.text
     id = update.message.from_user.id
     list_id = database_funcs.find_common_lang(lang)
@@ -310,6 +324,7 @@ async def fix_lang(update, context):
         res += f'\nИмя: {inf[0]}\nИнститут: {inf[1]}\nКурс: {inf[2]}\nКонтакт: @{inf[3]}\n\n'
 
     await update.message.reply_text(res, reply_markup=markup_go)
+
 
     database_funcs.add_lang(id, lang)
 
